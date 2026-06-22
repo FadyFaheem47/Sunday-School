@@ -1,359 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
-
-  <head>
-    <meta charset="UTF-8">
-    <title>تجربة 3</title>
-    <link rel="stylesheet" href="./style.css">
-
-  </head>
-    
-  <body>
-  <!DOCTYPE html>
-<html lang="ar">
-
 <head>
-  <meta charset="UTF-8">
-  <title>Kids Quiz App</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scripture Challenge — Bible Quiz Game</title>
+
+  <!-- Google Fonts: Cinzel for display, Inter for body -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+   
+  </style>
 </head>
-
-<!-- mammoth (docx -> text) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.14/mammoth.browser.min.js"></script>
-<!-- pdf.js (لـ استخراج نص من pdf) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.13.216/pdf.min.js"></script>
-<!-- jsPDF (لإنشاء PDF للتصدير) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- SheetJS (xlsx) لو عايز إكسل -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <body>
 
-  <!-- شاشة تسجيل الدخول -->
-  <div id="auth-screen" class="screen">
-    <div class="auth-box" id="auth-box">
-      <h1>🎉كنيسة مارجرجس بسبك الضحاك🎉</h1>
-      <input type="text" id="username" placeholder="اسم المستخدم">
-      <input type="password" id="password" placeholder="كلمة السر">
-      <button onclick="login()">🔑 تسجيل دخول</button>
-      <span class="register-link" onclick="openRegister()">ليس لدى حساب</span>
+<!-- ================================================
+     TOAST CONTAINER (global notifications)
+     ================================================ -->
+<div id="toast-container"></div>
+
+<!-- ================================================
+     SCREEN 1: LOBBY / HOME
+     ================================================ -->
+<section id="screen-lobby" class="screen active">
+  <div class="app-header">
+    <h1>Scripture<br>Challenge</h1>
+    <div class="tagline">A Bible Quiz Game for Groups</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✦ Choose Your Role</div>
+    <div class="role-cards">
+      <div class="role-card" id="role-leader" onclick="selectRole('leader')">
+        <div class="role-icon">✝</div>
+        <div class="role-label">Leader</div>
+        <div class="role-desc">Host the game, choose books & questions, manage scores</div>
+      </div>
+      <div class="role-card" id="role-participant" onclick="selectRole('participant')">
+        <div class="role-icon">👥</div>
+        <div class="role-label">Participant</div>
+        <div class="role-desc">Join a room with a code and compete to buzz in first</div>
+      </div>
     </div>
   </div>
 
-  <!-- شاشة إنشاء حساب -->
-  <div id="register-screen" class="screen hidden">
-    <div class="auth-box" id="register-box">
-      <h1>📝 إنشاء حساب جديد</h1>
+  <div class="card mt-12" id="leader-setup" style="display:none">
+    <div class="card-title">✦ Create Your Room</div>
+    <div class="form-group">
+      <label>Your Name (Leader)</label>
+      <input type="text" id="leader-name-input" placeholder="e.g. Pastor John" maxlength="24" />
+    </div>
+    <button class="btn btn-gold btn-full btn-lg" onclick="createRoom()">Create Room &amp; Start</button>
+  </div>
 
-      <div class="avatar-picker-wrap">
-        <label>اختر Avatar أو ارفع صورة (اختياري)</label>
-        <div class="avatar-picker" id="register-avatar-picker">
-          <!-- صور Avatar ستحمل عبر CSS/JS (dicebear) -->
-          <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=boy1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=boy1&size=64" alt="avatar1">
-          <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=girl1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=girl1&size=64" alt="avatar2">
-          <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=dog1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=dog1&size=64" alt="avatar3">
-          <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=cat1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=cat1&size=64" alt="avatar4">
-          <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=robot1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=robot1&size=64" alt="avatar5">
-        </div>
-        <input type="hidden" id="reg-avatar" value="">
-      </div>
+  <div class="card mt-12" id="participant-setup" style="display:none">
+    <div class="card-title">✦ Join a Room</div>
+    <div class="form-group">
+      <label>Your Name</label>
+      <input type="text" id="participant-name-input" placeholder="e.g. Mary" maxlength="24" />
+    </div>
+    <div class="form-group">
+      <label>Room Code</label>
+      <input type="text" id="room-code-input" placeholder="e.g. FAITH-4821" maxlength="12" style="text-transform:uppercase" />
+    </div>
+    <button class="btn btn-gold btn-full btn-lg" onclick="joinRoom()">Join Room</button>
+  </div>
+</section>
 
-      <input type="text" id="reg-name" placeholder="👤 الاسم">
-      <input type="text" id="reg-phone" placeholder="📱 رقم المحمول">
-      <input type="date" id="reg-birth">
-      <input type="file" id="reg-photo" accept="image/*">
-      <input type="password" id="reg-pass" placeholder="🔑 كلمة السر">
-      <input type="password" id="reg-pass2" placeholder="🔑 تأكيد كلمة السر">
+<!-- ================================================
+     SCREEN 2: LEADER VIEW
+     ================================================ -->
+<section id="screen-leader" class="screen">
+  <div class="top-bar">
+    <div>
+      <div class="room-code-label">Room Code</div>
+      <div class="room-code-val" id="leader-room-code-display">—</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="copyRoomLink()">📋 Copy Invite Link</button>
+  </div>
 
-      <select id="reg-stage">
-        <option value="">-- اختر المرحلة --</option>
-        <option value="أولى وتانية">أولى وتانية</option>
-        <option value="تالتة ورابعة">تالتة ورابعة</option>
-        <option value="خامسة وسادسة">خامسة وسادسة</option>
-        <option value="إعدادى وثانوي">إعدادى وثانوي</option>
-        <option value="الراعى الصالح">الراعى الصالح</option>
+  <!-- Share Panel -->
+  <div class="card">
+    <div class="card-title">📤 Share Invitation</div>
+    <div class="room-share">
+      <input type="text" id="invite-link-box" readonly />
+      <button class="btn btn-gold" onclick="copyRoomLink()">Copy</button>
+      <button class="btn btn-success" onclick="shareWhatsApp()" title="Share via WhatsApp">
+        💬 WhatsApp
+      </button>
+    </div>
+    <p class="text-sm dim mt-8">Share this link or code so participants can join instantly.</p>
+  </div>
+
+  <!-- Book & Difficulty Selection -->
+  <div class="card">
+    <div class="card-title">📖 Select Book &amp; Difficulty</div>
+    <div class="form-group">
+      <label>Bible Book</label>
+      <select id="book-select"></select>
+    </div>
+    <div class="form-group">
+      <label>Difficulty Level</label>
+      <select id="difficulty-select">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
       </select>
-
-      <div class="row">
-        <button onclick="register()">✅ إنشاء الحساب</button>
-        <button onclick="backToLogin()">↩️ رجوع</button>
-      </div>
     </div>
-  </div>
-  <!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
-  <!-- شاشة المستخدم الرئيسية -->
-  <div id="user-home" class="screen hidden">
-    <aside class="sidebar" id="main-sidebar">
-      <img id="user-photo" class="profile-pic" src="" alt="صورة">
-      <div id="user-coins" class="coins-display">💰 0</div>
-
-      <h3 id="user-name"></h3>
-
-      <div id="badges" class="badges-panel" aria-hidden="false" title="شاراتك"></div>
-
-      <button class="side-btn" onclick="openProfile()"><span class="icon">👤</span> حسابى</button>
-      <button class="side-btn" onclick="openMyResults()"><span class="icon">📊</span> نتائجى</button>
-      <button class="side-btn" onclick="showUserShop()">🛒 المتجر</button>
-
-      <button class="side-btn" onclick="logout()"><span class="icon">🚪</span> تسجيل خروج</button>
-    </aside>
-
-    <main class="content">
-      <h2 id="stage-title"></h2>
-      <p id="stage-details"></p>
-      <button onclick="startQuiz()">🚀 جاهز للبدء</button>
-    </main>
+    <button class="btn btn-gold btn-full" onclick="loadQuestion()">⚡ Load New Question</button>
+    <p class="text-sm dim mt-8">The book and difficulty are <strong>not revealed</strong> to participants.</p>
   </div>
 
-  <!-- شاشة حسابي -->
-  <div id="profile-screen" class="screen hidden">
-    <div class="auth-box" id="profile-box">
-      <h1>👤 حسابي</h1>
-      <img id="profile-current-photo" class="profile-pic" src="" alt="الصورة">
-      <div class="avatar-picker" id="profile-avatar-picker">
+  <!-- Current Question (Leader preview) -->
+  <div class="card" id="leader-question-card" style="display:none">
+    <div class="card-title">📝 Current Question (Leader View)</div>
+    <div class="question-box" id="leader-question-box">
+      <div class="question-text" id="leader-question-text"></div>
+      <div class="question-meta" id="leader-question-meta"></div>
+    </div>
+    <div class="mt-12">
+      <p class="text-sm dim">Answer: <strong id="leader-answer-text" class="gold"></strong></p>
+    </div>
+    <button class="btn btn-ghost btn-sm mt-12" onclick="loadQuestion()">↻ Next Question</button>
+  </div>
 
-        <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=boy1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=boy1&size=64" alt="avatar1">
-        <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=girl1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=girl1&size=64" alt="avatar2">
-        <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=dog1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=dog1&size=64" alt="avatar3">
-        <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=cat1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=cat1&size=64" alt="avatar4">
-        <img class="avatar-option" data-url="https://api.dicebear.com/6.x/adventurer/png?seed=robot1&size=128" src="https://api.dicebear.com/6.x/adventurer/png?seed=robot1&size=64" alt="avatar5">
-      </div>
-      <input type="file" id="profile-photo" accept="image/*">
-      <input type="text" id="profile-phone" placeholder="📱 رقم المحمول">
-      <input type="date" id="profile-birth"placeholder="تاريخ الميلاد">
- <label>🔑 تغيير كلمة السر:</label>
-      <input type="password" id="old-pass" placeholder="كلمة السر الحالية">
-      <input type="password" id="new-pass" placeholder="كلمة السر الجديدة">
-      <input type="password" id="confirm-pass" placeholder="تأكيد كلمة السر الجديدة">
-
-      <div class="row">
-        <button onclick="saveProfile()">💾 حفظ التعديلات</button>
-        <button onclick="backToHome()">↩️ رجوع</button>
-      </div>
+  <!-- Timer Panel -->
+  <div class="card" id="leader-timer-card" style="display:none">
+    <div class="card-title">⏱ Timer Control</div>
+    <div class="text-center" style="padding: 12px 0;">
+      <div class="timer-display" id="leader-timer">—</div>
+      <p class="text-sm dim mt-8" id="leader-buzzer-status">Waiting for a buzz…</p>
+    </div>
+    <div class="leader-controls">
+      <button class="btn btn-ghost" onclick="addTime(10)">+10s</button>
+      <button class="btn btn-ghost" onclick="addTime(30)">+30s</button>
+      <button class="btn btn-success" onclick="awardPoints(100)">+100 pts</button>
+      <button class="btn btn-danger" onclick="awardPoints(-50)">−50 pts</button>
+      <button class="btn btn-ghost" onclick="resetBuzzer()">🔄 Reset Buzz</button>
     </div>
   </div>
 
-  <!-- شاشة الأسئلة -->
-  <div id="quiz-screen" class="screen hidden">
-    <div class="row-between">
-      <div id="timer">⏳ 00:00</div>
-      <div id="score-counter">النقاط: 0</div>
+  <!-- Scoreboard -->
+  <div class="card">
+    <div class="card-title">🏆 Scoreboard</div>
+    <ul class="player-list" id="leader-player-list">
+      <li class="player-item"><span class="dim text-sm" style="width:100%;text-align:center">No participants yet</span></li>
+    </ul>
+  </div>
+
+  <!-- Suggestions Card -->
+  <div class="card">
+    <div class="card-title">💡 Enhancement Ideas</div>
+    <ul class="suggestions-list">
+      <li><strong>Sound Effects:</strong> Buzz-in chime, countdown beep, correct/wrong answer sounds for drama and engagement.</li>
+      <li><strong>Confetti Animation:</strong> Celebrate correct answers with a confetti burst to reward participants visually.</li>
+      <li><strong>Team Mode:</strong> Split participants into two teams with shared scores and alternating turn logic.</li>
+      <li><strong>Power-Ups:</strong> "Double Points" or "50/50 Hint" tokens participants can earn and spend strategically.</li>
+      <li><strong>Chat &amp; Reactions:</strong> A sidebar live chat with emoji reactions (🙌 🔥 🤔) to build energy during play.</li>
+      <li><strong>Multi-Round Game:</strong> Define rounds per Bible Testament (OT / NT), with a wrap-up screen showing full stats.</li>
+      <li><strong>Streak Bonuses:</strong> Award bonus points for consecutive correct answers to reward consistent performers.</li>
+      <li><strong>Mobile PWA:</strong> Package as a Progressive Web App so participants can install it on their phones.</li>
+      <li><strong>Backend Sync:</strong> Use Firebase Realtime Database or Supabase for true multi-device real-time sync (currently simulated locally).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================================================
+     SCREEN 3: PARTICIPANT VIEW
+     ================================================ -->
+<section id="screen-participant" class="screen">
+  <div class="top-bar">
+    <div>
+      <div class="room-code-label">Room Code</div>
+      <div class="room-code-val" id="participant-room-code-display">—</div>
     </div>
-    <h2 id="question-text"></h2>
-    <div id="options" class="options-grid"></div>
+    <div class="text-sm dim" id="participant-name-display"></div>
   </div>
 
-  <!-- شاشة النتيجة -->
-  <div id="result-screen" class="screen hidden">
-    <h2>🎯 نتيجتك 🎯</h2>
-    <p id="score-text"></p>
-    <p id="badge" class="badge"></p>
-    <div id="review"></div>
-    <button onclick="backToHome()">🏠 الصفحة الرئيسية</button>
-  </div>
-
-  <!-------------------------- شاشة النتائج السابقة ------------------------------->
-  <div id="my-results-screen" class="screen hidden">
-    <h2>📊 نتائجي</h2>
-    <table id="myResultsTable">
-      <thead>
-        <tr>
-          <th>📅 التاريخ</th>
-          <th>🏆 الدرجة</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="backToHome()">↩️ رجوع</button>
-  </div>
-  <!-------------------------- شاشة المتجر ------------------------------->
-
-  <div id="user-shop-screen" class="screen hidden">
-    <h2>🛒 متجر الأفاتارات</h2>
-    <div id="user-shop-items" class="shop-items"></div>
-    <button onclick="backToHome()">⬅️ رجوع</button>
-  </div>
-
-  <!-- أصوات -->
-  <audio id="correctSound" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
-  <audio id="wrongSound" src="https://www.soundjay.com/human/fart-squeak-01.mp3"></audio>
-  <!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
-  <!-- شاشة Sub Admin -->
-  <div id="subadmin-home" class="screen hidden">
-    <h1> <span id="subadmin-stage"></span></h1>
-
-    <section id="subadmin-controls">
-      <h3>إعدادات المرحلة</h3>
-      <label>محاولات يومية لكل مستخدم:
-        <input id="cfg-attempts" type="number" min="0" value="0">
-      </label>
-      <label>وقت بداية الاختبار:
-        <input id="cfg-start" type="datetime-local">
-      </label>
-      <label>وقت نهاية الاختبار:
-        <input id="cfg-end" type="datetime-local">
-      </label>
-      <label>وقت المؤقت (بالثواني) - Override:
-        <input id="cfg-timer" type="number" min="0" placeholder="اترك فارغ لو لا تغيير">
-      </label>
-      <button onclick="saveStageConfig()">💾 حفظ إعدادات المرحلة</button>
-    </section>
-
-    <hr>
-
-    <section id="subadmin-upload">
-      <h3>رفع ملف أسئلة (json / txt / docx / pdf)</h3>
-      <input id="questions-file" type="file" accept=".json,.txt,.docx,.pdf">
-<div style="margin-top:6px;">
-  <button onclick="addQuestionsForSubadmin()">⬆ إضافة الأسئلة للمرحلة</button>
-  <button onclick="replaceQuestionsForSubadmin()">� استبدال الأسئلة بالكامل</button>
-</div>
-      <div id="upload-log" style="margin-top:8px;color:#333;"></div>
-    </section>
-
-    <hr>
-
-    <section id="subadmin-users" style="margin-top:16px;"></section>
-
-    <hr>
-
-    <section id="subadmin-results" style="margin-top:16px;"></section>
-
-    <button onclick="logout()">⬅️ رجوع</button>
-  </div>
-
-  <!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
-  <!-- ==================== ADMIN HOME ==================== -->
-  <div id="admin-home" class="screen hidden">
-    <h2 class="admin-title">لوحة تحكم المشرف العام</h2>
-
-    <div class="panel admin-buttons">
-      <button onclick="showAdminSection('manage-subadmins')">👨‍💼 إدارة المشرفين الفرعيين</button>
-      <button onclick="showAdminSection('manage-stages')">📚 إدارة المراحل والاختبارات</button>
-      <button onclick="showAdminSection('manage-users')">👥 إدارة المستخدمين</button>
-      <button onclick="showAdminSection('manage-shop')">🛒 المتجر</button>
-      <button onclick="logout()">🚪 تسجيل الخروج</button>
-    </div>
-
-    <!-- أقسام قابلة للتبديل -->
-    <div id="admin-sections">
-      <!-- ======= Manage Subadmins (Admin) ======= -->
-      <div id="manage-subadmins" class="admin-section hidden">
-        <h3>👥 إدارة المشرفين الفرعيين</h3>
-        <div id="subadmins-list">تحميل...</div>
-
-        <div id="subadmin-form-wrap">
-          <h4>➕ إنشاء / تعديل مشرف فرعى</h4>
-          <input id="sub-name" placeholder="اسم المستخدم (مثال: sub1)" />
-          <input id="sub-pass" placeholder="كلمة السر" />
-          <select id="sub-stage">
-            <option value="">-- اختر المرحلة --</option>
-            <option value="مرحلة اولى وتانية">مرحلة اولى وتانية</option>
-            <option value="مرحلة ثالثة ورابعة">مرحلة ثالثة ورابعة</option>
-            <option value="مرحلة خامسة وسادسة">مرحلة خامسة وسادسة</option>
-            <option value="مرحلة إعدادى وثانوى">مرحلة إعدادى وثانوى</option>
-            <option value="مرحلة الراعى الصالح">مرحلة الراعى الصالح</option>
-          </select>
-          <div style="margin-top:8px;">
-            <button onclick="createSubadmin()">حفظ مشرف جديد</button>
-            <button onclick="clearSubadminForm()">مسح الحقول</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="manage-stages" class="admin-section hidden">
-        <h3>📚 إدارة المراحل</h3>
-        <div id="admin-stage-list"></div>
-        <div id="admin-stage-users" class="hidden panel">
-          <h4 id="stage-users-title"></h4>
-          <table>
-            <thead>
-              <tr>
-                <th>👤 الاسم</th>
-                <th>📱 التليفون</th>
-                <th>🏆 أعلى نتيجة</th>
-              </tr>
-            </thead>
-            <tbody id="stage-users-table"></tbody>
-          </table>
-          <button onclick="hideStageUsers()">⬅️ رجوع</button>
-        </div>
-      </div>
-
-      <div id="manage-users" class="admin-section hidden">
-        <h3>👥 إدارة المستخدمين</h3>
-        <!-- إدارة مرحلة (Admin يحذف/يعدل إعدادات المشرف الفرعى بنفس BIN) -->
-        <div id="admin-manage-stage" class="panel">
-          <h3>⚙️ إدارة إعدادات المرحلة (Admin)</h3>
-
-          <label>اختر المرحلة:</label>
-          <select id="admin-stage-picker" onchange="onAdminStagePicked()">
-            <option value="">-- اختر المرحلة --</option>
-            <!-- سيتم ملؤها ديناميكياً بواسطة fillAdminStagePicker() -->
-          </select>
-
-          <div id="admin-stage-settings" class="hidden" style="margin-top:12px;">
-            <label>محاولات يومية لكل مستخدم (0 = غير محدود):</label>
-            <input id="admin-max-attempts" type="number" min="0" value="0" style="width:140px">
-
-            <label>وقت المؤقت (بالثواني) — اترك فارغاً لاستخدام الافتراضي:</label>
-            <input id="admin-timer" type="number" min="0" placeholder="مثال: 300">
-
-            <label>وقت بداية الاختبار:</label>
-            <input id="admin-start-time" type="datetime-local">
-
-            <label>وقت نهاية الاختبار:</label>
-            <input id="admin-end-time" type="datetime-local">
-
-            <div style="margin-top:10px;">
-              <button onclick="saveStageSettingsForAdmin()">💾 حفظ إعدادات</button>
-              <button onclick="clearAdminStageSettings()">مسح الحقول</button>
-            </div>
-
-            <hr>
-
-            <h4>📂 رفع ملف أسئلة (يُخزن في بن المرحلة)</h4>
-            <input id="admin-questions-file" type="file" accept=".json,.txt,.pdf,.docx">
-            <div style="margin-top:6px;">
-              <button onclick="uploadQuestionsForAdmin()">⬆️ رفع (يتم الإضافة)</button>
-              <button onclick="replaceQuestionsForAdmin()">🔁 استبدال الأسئلة بالملف</button>
-            </div>
-            <div id="admin-upload-log" style="margin-top:8px;color:#333"></div>
-          </div>
-        </div>
-
-      </div>
-
-      <div id="manage-shop" class="admin-section hidden">
-        <h3>🛒 إدارة المتجر</h3>
-
-        <div class="panel">
-          <h4>➕ إضافة أفاتار جديد</h4>
-          <input id="avatar-url" placeholder="ضع رابط صورة الأفاتار" />
-          <input id="avatar-price" type="number" placeholder="سعر الأفاتار" />
-          <button onclick="addAvatar()">حفظ</button>
-        </div>
-
-        <h4>📋 قائمة الأفاتارات</h4>
-        <div id="avatar-list"></div>
-      </div>
-
-    </div>
-
-    <div id="admin-competitions" class="admin-section hidden">
-      <h3>🏆 مسابقات المشرف العام</h3>
-      <p>هنا هنخلي الأدمِن يضيف اختبار مخصص (لاحقًا).</p>
+  <!-- Question Display -->
+  <div class="card" id="participant-question-card" style="display:none">
+    <div class="card-title">📖 Question</div>
+    <div class="question-box">
+      <div class="question-text" id="participant-question-text"></div>
+      <div class="question-meta" id="participant-question-meta"></div>
     </div>
   </div>
+
+  <!-- Waiting state -->
+  <div class="card text-center" id="participant-waiting-card">
+    <div style="padding: 20px 0;">
+      <div style="font-size: 2.5rem; margin-bottom: 12px;">⏳</div>
+      <p class="dim">Waiting for the leader to load a question…</p>
+    </div>
   </div>
 
-  <!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
-  <script src="script.js"></script>
+  <!-- Timer (visible to all) -->
+  <div class="card text-center" id="participant-timer-card" style="display:none">
+    <div class="card-title">⏱ Time Remaining</div>
+    <div class="timer-display" id="participant-timer">—</div>
+  </div>
+
+  <!-- Buzzer Banner -->
+  <div id="participant-buzzer-banner" class="buzzer-banner"></div>
+
+  <!-- Buzz Button Zone -->
+  <div class="buzz-zone" id="participant-buzz-zone" style="display:none">
+    <button class="buzz-btn" id="buzz-btn" onclick="buzzIn()">BUZZ!</button>
+    <p class="dim text-sm text-center" id="buzz-status-text">Press when you know the answer!</p>
+  </div>
+
+  <!-- Scoreboard -->
+  <div class="card">
+    <div class="card-title">🏆 Scoreboard</div>
+    <ul class="player-list" id="participant-player-list">
+      <li class="player-item"><span class="dim text-sm" style="width:100%;text-align:center">Waiting for players…</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================================================
+     JAVASCRIPT — GAME LOGIC
+     ================================================ -->
+<script>
+
+</script>
 </body>
-
-</html>
-    <script  src="./script.js"></script>
-
-  </body>
-  
 </html>
